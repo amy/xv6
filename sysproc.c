@@ -6,6 +6,7 @@
 #include "memlayout.h"
 #include "mmu.h"
 #include "proc.h"
+#include "signal.h"
 
 int
 sys_fork(void)
@@ -101,4 +102,32 @@ sys_halt(void)
   for( ; *p; p++)
     outw(0xB004, 0x2000);
   return 0;
+}
+
+
+///////////////////////
+// Functions I write //
+///////////////////////
+
+int
+sys_register_signal_handler(void){
+
+  int signum;
+  int defhandler;
+  
+  if(argint(0, &signum) < 0){
+    return -1;
+  }
+  
+  if(argint(1, &defhandler) < 0){
+    return -1;
+  }
+  
+  sighandler_t handler = (sighandler_t)defhandler;
+  return register_signal_handler(signum, handler);
+}
+
+int
+sys_alarm(void){
+  return 1;
 }
