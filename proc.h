@@ -1,5 +1,10 @@
+//#include <stdlib.h>
+#include "signal.h"
+
 // Segments in proc->gdt.
-#define NSEGS     7
+#define NSEGS       7
+#define NUM_SIGNALS 100
+
 
 // Per-CPU state
 struct cpu {
@@ -66,6 +71,13 @@ struct proc {
   struct file *ofile[NOFILE];  // Open files
   struct inode *cwd;           // Current directory
   char name[16];               // Process name (debugging)
+
+  ///////////////////////////////////////////////////////
+  //  Each Process has it own array of signal handlers //
+  ///////////////////////////////////////////////////////
+
+  sighandler_t signals[NUM_SIGNALS];
+  int alarm;
 };
 
 // Process memory is laid out contiguously, low addresses first:
@@ -73,3 +85,13 @@ struct proc {
 //   original data and bss
 //   fixed-size stack
 //   expandable heap
+
+///////////////////
+// STUFF I WROTE //
+///////////////////
+
+/**
+ * SYSTEM CALL PROTOTYPES
+ */
+int register_signal_handler(int signum, sighandler_t handler);
+int alarm(int seconds);

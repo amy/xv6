@@ -464,3 +464,25 @@ procdump(void)
     cprintf("\n");
   }
 }
+
+//////////////////////////////
+// Functions I have defined //
+//////////////////////////////
+
+/**
+ * Process registers handler to signum
+ * 
+ * RETURN : 0 on failure, 1 on success
+ */
+int
+register_signal_handler(int signum, sighandler_t handler) {
+
+  if (signum > NUM_SIGNALS || signum < NUM_SIGNALS ) {
+    return 0;
+  }
+
+  proc->signals[signum] = handler;
+  return 1;
+
+}
+
