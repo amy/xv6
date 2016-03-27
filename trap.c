@@ -52,37 +52,29 @@ trap(struct trapframe *tf)
 
   case T_DIVIDE:
     // SIGFPE
-    
-    tf->esp = tf->esp-24; 
+    //tf->eip = (uint)(proc->signal_handlers[SIGFPE]);
+
+    if (0) {
+      cprintf("askdj");
+    }
+
+    if (proc->signal_handlers[SIGFPE] == (sighandler_t) -1) {
+      cprintf("Error: no handler for signal. Kill process.");
+      kill(proc->pid);
+    }
+
+    siginfo_t info;      
+    info.signum = SIGFPE;
+    *((siginfo_t*)(proc->tf->esp - 4)) = info;
+    proc->tf->esp = (uint)((proc->tf->esp) - (sizeof(siginfo_t))- 4);
+
+    //tf->esp = tf->esp-24;
+    // what address the program will go to after current stack is done
     tf->eip = (uint)(proc->signal_handlers[SIGFPE]);
     break;
 
   case T_IRQ0 + IRQ_TIMER:
     // SIGALRM
-
-    if (proc && proc->alarm_state == ALARM_SET) {
-      
-      proc->ticks --;
-
-      if(proc->ticks == 0) {
-        // send signal here, alarm is activated
-        proc->alarm_state = ALARM_ACTIVATED;
-        //tf->esp = tf->esp - 8; 
-        //tf->esp = (uint)((tf->esp) - (sizeof(siginfo_t))- 4);
-        
-        siginfo_t info;      
-        info.signum = SIGALRM;
-        *((siginfo_t*)(proc->tf->esp - 4)) = info;
-        //*((uint) (tf->esp - sizeof(siginfo_t) - 4)) = tf->eip;
-
-        tf->esp = (uint)((tf->esp) - (sizeof(siginfo_t))- 4);
-
-
-        tf->eip = (uint)(proc->signal_handlers[SIGALRM]);
-        cprintf("ALARM_ACTIVATED");
-      }
-    
-    }
 
     if(cpu->id == 0){
       acquire(&tickslock);
@@ -91,6 +83,21 @@ trap(struct trapframe *tf)
       release(&tickslock);
     }
     lapiceoi();
+
+    if (proc && ((tf->cs & 3) == 3) && proc->alarm_state == ALARM_SET) {
+      
+      proc->ticks --;
+
+      if(proc->ticks == 0) {
+        // send signal here, alarm is activated
+        proc->alarm_state = ALARM_ACTIVATED;
+        //tf->esp = tf->esp - 8; 
+        //tf->esp = (uint)((tf->esp) - (sizeof(siginfo_t))- 4);
+        proc->ticks = proc->alarm_ticks;
+        //cprintf("ALARM_ACTIVATED");
+      }
+    
+    }
 
     break;
   case T_IRQ0 + IRQ_IDE:
@@ -139,8 +146,19 @@ trap(struct trapframe *tf)
 
   // Force process to give up CPU on clock tick.
   // If interrupts were on while locks held, would need to check nlock.
-  if(proc && proc->state == RUNNING && tf->trapno == T_IRQ0+IRQ_TIMER)
+  if(proc && proc->state == RUNNING && tf->trapno == T_IRQ0+IRQ_TIMER) {
     yield();
+    if (proc->alarm_state == ALARM_ACTIVATED) {
+      siginfo_t info;      
+      info.signum = SIGALRM;
+      *((siginfo_t*)(proc->tf->esp - 4)) = info;
+          //*((uint) (tf->esp - sizeof(siginfo_t) - 4)) = tf->eip;
+
+      proc->tf->esp = (uint)((proc->tf->esp) - (sizeof(siginfo_t))- 4);
+
+      proc->tf->eip = (uint)(proc->signal_handlers[SIGALRM]);
+    }
+  }
 
   // Check if the process has been killed since we yielded
   if(proc && proc->killed && (tf->cs&3) == DPL_USER)

@@ -173,14 +173,11 @@ UPROGS=\
 	_wc\
 	_zombie\
 	_shutdown\
-<<<<<<< HEAD
-=======
 	_stage1_sigfpe\
 	_stage1_sigalrm\
-#	_stage1_nested\
-#	_stage2\
-#	_stage3\
->>>>>>> 04cd76fbcfef34dadcc9b568c9d17b7d435f8a31
+	_stage1_nested\
+	_stage2\
+	_stage3\
 
 fs.img: mkfs README $(UPROGS)
 	./mkfs fs.img README $(UPROGS)

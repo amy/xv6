@@ -79,6 +79,7 @@ struct proc {
 
   int alarm_state;  // alarm flag, 1 if has alarm, 0 if does not
   int ticks;  // alarm counter, goes off when hits 0
+  int alarm_ticks;
 };
 
 // Process memory is laid out contiguously, low addresses first:

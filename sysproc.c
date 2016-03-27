@@ -145,6 +145,7 @@ sys_alarm(void)
 
   proc->alarm_state = ALARM_SET;
   proc->ticks = proc_ticks;
+  proc->alarm_ticks = proc_ticks;
 
   return 0;
 }
