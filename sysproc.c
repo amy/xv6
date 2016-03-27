@@ -7,6 +7,8 @@
 #include "mmu.h"
 #include "proc.h"
 
+#include "signal.h"
+
 int
 sys_fork(void)
 {
@@ -100,5 +102,49 @@ sys_halt(void)
   char *p = "Shutdown";
   for( ; *p; p++)
     outw(0xB004, 0x2000);
+  return 0;
+}
+
+/**
+ * Kernel side of register_signal_handler
+ * argint takes arguments from user stack
+ * 
+ */
+int 
+sys_register_signal_handler(void)
+{
+  int user_signum;
+  int user_handler;
+  
+  if(argint(0, &user_signum) < 0){
+    return -1;
+  }
+  
+  if(argint(1, &user_handler) < 0){
+    return -1;
+  }
+  
+  sighandler_t handler = (sighandler_t)user_handler;
+  return register_signal_handler(user_signum, handler);
+}
+
+/**
+ * Set alarm element 
+ */
+int
+sys_alarm(void)
+{
+
+  cprintf("HIT");
+
+  int proc_ticks;
+
+  if(argint(0, &proc_ticks) < 0) {
+    return -1;
+  }
+
+  proc->alarm_state = ALARM_SET;
+  proc->ticks = proc_ticks;
+
   return 0;
 }
