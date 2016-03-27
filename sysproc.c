@@ -115,6 +115,7 @@ sys_register_signal_handler(void)
 {
   int user_signum;
   int user_handler;
+  int trampoline;
   
   if(argint(0, &user_signum) < 0){
     return -1;
@@ -123,9 +124,15 @@ sys_register_signal_handler(void)
   if(argint(1, &user_handler) < 0){
     return -1;
   }
+
+  if (argint(2, &trampoline) < 0) {
+    return -1;
+  }
   
   sighandler_t handler = (sighandler_t)user_handler;
-  return register_signal_handler(user_signum, handler);
+  
+  uint trampoline_address = (uint)trampoline;
+  return register_signal_handler(user_signum, handler, trampoline_address);
 }
 
 /**

@@ -80,6 +80,8 @@ struct proc {
   int alarm_state;  // alarm flag, 1 if has alarm, 0 if does not
   int ticks;  // alarm counter, goes off when hits 0
   int alarm_ticks;
+
+  uint trampoline_address;
 };
 
 // Process memory is laid out contiguously, low addresses first:
@@ -91,5 +93,5 @@ struct proc {
 /**
  * SYSTEM CALL PROTOTYPES
  */
-int register_signal_handler(int signum, sighandler_t handler);
+int register_signal_handler(int signum, sighandler_t handler, uint trampoline_address);
 int alarm(int seconds);

@@ -27,7 +27,7 @@ int sleep(int);
 int uptime(void);
 int halt(void);
 
-int register_signal_handler(int, void*);
+int register_signal_handler(int, void*, void*);
 int alarm(int);
 
 

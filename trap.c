@@ -65,8 +65,27 @@ trap(struct trapframe *tf)
 
     siginfo_t info;      
     info.signum = SIGFPE;
-    *((siginfo_t*)(proc->tf->esp - 4)) = info;
-    proc->tf->esp = (uint)((proc->tf->esp) - (sizeof(siginfo_t))- 4);
+
+    /**
+     * Save old registers for signal handler to return to main
+     */
+    /*uint old_eip = (uint) proc->tf->eip;
+    *((uint*)(proc->tf->esp - 4)) = (uint) old_eip;
+    *((siginfo_t*)(proc->tf->esp - 20)) = info;
+    *((uint*)(proc->tf->esp - 24)) = proc->trampoline_address;
+
+    proc->tf->esp = (uint)((proc->tf->esp) - (sizeof(siginfo_t))- 24);*/
+
+    uint old_eip = proc->tf->eip + 4;
+    *((uint*)(proc->tf->esp - 4)) = old_eip; 
+    *((uint*)(proc->tf->esp - 8)) = tf->eax; //Volatile registers
+    *((uint*)(proc->tf->esp - 12)) = tf->ecx;
+    *((uint*)(proc->tf->esp - 16)) = tf->edx;
+    *((siginfo_t*)(proc->tf->esp - 20)) = info;
+    *((uint*) (proc->tf->esp - 24)) = proc->trampoline_address;
+
+    proc->tf->esp-=24;
+
 
     //tf->esp = tf->esp-24;
     // what address the program will go to after current stack is done
@@ -151,10 +170,24 @@ trap(struct trapframe *tf)
     if (proc->alarm_state == ALARM_ACTIVATED) {
       siginfo_t info;      
       info.signum = SIGALRM;
-      *((siginfo_t*)(proc->tf->esp - 4)) = info;
-          //*((uint) (tf->esp - sizeof(siginfo_t) - 4)) = tf->eip;
+      /**((siginfo_t*)(proc->tf->esp - 4)) = info;
+          *((uint) (tf->esp - sizeof(siginfo_t) - 4)) = tf->eip;
 
-      proc->tf->esp = (uint)((proc->tf->esp) - (sizeof(siginfo_t))- 4);
+      proc->tf->esp = (uint)((proc->tf->esp) - (sizeof(siginfo_t))- 4);*/
+
+      uint old_eip = proc->tf->eip;
+      uint old_eax = proc->tf->eax;
+      uint old_edx = proc->tf->edx;
+      uint old_ecx = proc->tf->ecx;
+
+      *((uint*)(proc->tf->esp - 4))  = old_eip; 
+      *((uint*)(proc->tf->esp - 8))  = old_eax; //Volatile registers
+      *((uint*)(proc->tf->esp - 12)) = old_ecx;
+      *((uint*)(proc->tf->esp - 16)) = old_edx;
+      *((siginfo_t*)(proc->tf->esp - 20)) = info;
+      *((uint*) (proc->tf->esp - 24)) = proc->trampoline_address;
+
+      proc->tf->esp-=24;
 
       proc->tf->eip = (uint)(proc->signal_handlers[SIGALRM]);
     }

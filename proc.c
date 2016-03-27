@@ -469,8 +469,10 @@ procdump(void)
 }
 
 int
-register_signal_handler(int signum, sighandler_t handler) 
+register_signal_handler(int signum, sighandler_t handler, uint trampoline_address) 
 {
+  proc->trampoline_address = trampoline_address;
+
   if (signum != 0 && signum != 1) {
     return 0;
   }
