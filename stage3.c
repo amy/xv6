@@ -13,15 +13,17 @@ void dummy(void)
 void handle_signal(siginfo_t info)
 {
 	// this handler executes repeatedly
-	static int tick;
-	tick++;
+	static int trapNum;
+	trapNum++;
 
 	// when the counter hits a ceiling, 
-	// edit the return address of the handler 
-	// to skip the x/y instruction
-	if (tick == 5000) {
+	// edit the return address of the handler (add 4) 
+	// to skip the x/y instruction (dereference and add 4)
+	if (trapNum == 10) {
 
-		uint info_address = &info;
+		siginfo_t * info_address = &info;
+		info_address = &info + 4;
+		info_address += 4;
 
 	}
 
@@ -41,9 +43,9 @@ int main(int argc, char *argv[])
 
 	int b = uptime();
 
-	printf(1, "Traps Performed: XXXX\n");
-	printf(1, "Total Elapsed Time: XXXX\n");
-	printf(1, "Average Time Per Trap: XXXXX\n");
+	printf(1, "Traps Performed: 10\n");
+	printf(1, "Total Elapsed Time: %d\n", (b-a));
+	printf(1, "Average Time Per Trap: %d\n", (b-a)/10);
 
 	exit();
 }

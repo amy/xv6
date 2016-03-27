@@ -76,7 +76,7 @@ trap(struct trapframe *tf)
 
     proc->tf->esp = (uint)((proc->tf->esp) - (sizeof(siginfo_t))- 24);*/
 
-    uint old_eip = proc->tf->eip + 4;
+    /**uint old_eip = proc->tf->eip + 4;
     *((uint*)(proc->tf->esp - 4)) = old_eip; 
     *((uint*)(proc->tf->esp - 8)) = tf->eax; //Volatile registers
     *((uint*)(proc->tf->esp - 12)) = tf->ecx;
@@ -84,7 +84,22 @@ trap(struct trapframe *tf)
     *((siginfo_t*)(proc->tf->esp - 20)) = info;
     *((uint*) (proc->tf->esp - 24)) = proc->trampoline_address;
 
+    proc->tf->esp-=24;*/
+
+    uint old_eip = proc->tf->eip;
+    uint old_eax = proc->tf->eax;
+    uint old_edx = proc->tf->edx;
+    uint old_ecx = proc->tf->ecx;
+
+    *((uint*)(proc->tf->esp - 4))  = old_eip; 
+    *((uint*)(proc->tf->esp - 8))  = old_eax;
+    *((uint*)(proc->tf->esp - 12)) = old_ecx;
+    *((uint*)(proc->tf->esp - 16)) = old_edx;
+    *((siginfo_t*)(proc->tf->esp - 20)) = info;
+    *((uint*) (proc->tf->esp - 24)) = proc->trampoline_address;
+
     proc->tf->esp-=24;
+
 
 
     //tf->esp = tf->esp-24;
@@ -181,7 +196,7 @@ trap(struct trapframe *tf)
       uint old_ecx = proc->tf->ecx;
 
       *((uint*)(proc->tf->esp - 4))  = old_eip; 
-      *((uint*)(proc->tf->esp - 8))  = old_eax; //Volatile registers
+      *((uint*)(proc->tf->esp - 8))  = old_eax;
       *((uint*)(proc->tf->esp - 12)) = old_ecx;
       *((uint*)(proc->tf->esp - 16)) = old_edx;
       *((siginfo_t*)(proc->tf->esp - 20)) = info;
