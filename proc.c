@@ -96,6 +96,9 @@ userinit(void)
   p->tf->esp = PGSIZE;
   p->tf->eip = 0;  // beginning of initcode.S
 
+  p->signal_handlers[0] = (sighandler_t)-1;
+  p->signal_handlers[1] = (sighandler_t)-1;
+
   safestrcpy(p->name, "initcode", sizeof(p->name));
   p->cwd = namei("/");
 
@@ -339,7 +342,8 @@ forkret(void)
     // of a regular process (e.g., they call sleep), and thus cannot 
     // be run from main().
     first = 0;
-    initlog();
+    iinit(ROOTDEV);
+    initlog(ROOTDEV);
   }
   
   // Return to "caller", actually trapret (see allocproc).
@@ -462,4 +466,16 @@ procdump(void)
     }
     cprintf("\n");
   }
+}
+
+int
+register_signal_handler(int signum, sighandler_t handler) 
+{
+  if (signum != 0 && signum != 1) {
+    return 0;
+  }
+
+  proc->signal_handlers[signum] = handler;
+
+  return 1;
 }

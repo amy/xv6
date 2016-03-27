@@ -1,5 +1,13 @@
+#include "signal.h"
+
 // Segments in proc->gdt.
 #define NSEGS     7
+
+// Alarm constants
+#define ALARM_NOTSET    0
+#define ALARM_SET       1
+#define ALARM_ACTIVATED 2
+#define ALARM_DISABLED  3
 
 // Per-CPU state
 struct cpu {
@@ -66,6 +74,11 @@ struct proc {
   struct file *ofile[NOFILE];  // Open files
   struct inode *cwd;           // Current directory
   char name[16];               // Process name (debugging)
+
+  sighandler_t signal_handlers[2];      // Array of signal handler function pointers
+
+  int alarm_state;  // alarm flag, 1 if has alarm, 0 if does not
+  int ticks;  // alarm counter, goes off when hits 0
 };
 
 // Process memory is laid out contiguously, low addresses first:
@@ -73,3 +86,9 @@ struct proc {
 //   original data and bss
 //   fixed-size stack
 //   expandable heap
+
+/**
+ * SYSTEM CALL PROTOTYPES
+ */
+int register_signal_handler(int signum, sighandler_t handler);
+int alarm(int seconds);

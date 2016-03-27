@@ -7,6 +7,8 @@
 #include "x86.h"
 #include "traps.h"
 #include "spinlock.h"
+#include "signal.h"
+
 
 // Interrupt descriptor table (shared by all CPUs).
 struct gatedesc idt[256];
@@ -47,7 +49,41 @@ trap(struct trapframe *tf)
   }
 
   switch(tf->trapno){
+
+  case T_DIVIDE:
+    // SIGFPE
+    
+    tf->esp = tf->esp-24; 
+    tf->eip = (uint)(proc->signal_handlers[SIGFPE]);
+    break;
+
   case T_IRQ0 + IRQ_TIMER:
+    // SIGALRM
+
+    if (proc && proc->alarm_state == ALARM_SET) {
+      
+      proc->ticks --;
+
+      if(proc->ticks == 0) {
+        // send signal here, alarm is activated
+        proc->alarm_state = ALARM_ACTIVATED;
+        //tf->esp = tf->esp - 8; 
+        //tf->esp = (uint)((tf->esp) - (sizeof(siginfo_t))- 4);
+        
+        siginfo_t info;      
+        info.signum = SIGALRM;
+        *((siginfo_t*)(proc->tf->esp - 4)) = info;
+        //*((uint) (tf->esp - sizeof(siginfo_t) - 4)) = tf->eip;
+
+        tf->esp = (uint)((tf->esp) - (sizeof(siginfo_t))- 4);
+
+
+        tf->eip = (uint)(proc->signal_handlers[SIGALRM]);
+        cprintf("ALARM_ACTIVATED");
+      }
+    
+    }
+
     if(cpu->id == 0){
       acquire(&tickslock);
       ticks++;
@@ -55,6 +91,7 @@ trap(struct trapframe *tf)
       release(&tickslock);
     }
     lapiceoi();
+
     break;
   case T_IRQ0 + IRQ_IDE:
     ideintr();
